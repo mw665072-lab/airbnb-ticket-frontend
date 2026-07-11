@@ -1,5 +1,5 @@
-import { lazy, Suspense, useState } from "react";
-import { ArrowLeft, Banknote, CreditCard, LoaderCircle, MessageSquareText, Send, XCircle } from "lucide-react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
+import { ArrowLeft, Banknote, Clock, CreditCard, FileText, LoaderCircle, MapPin, MessageSquareText, Plane, Send, User, Users, XCircle } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { getErrorMessage } from "@/api/client";
 import { bookingService, paymentService } from "@/api/services";
@@ -64,6 +64,70 @@ export function BookingDetailPage() {
     {request.isPending ? <InlineLoader /> : request.isError ? <div className="mt-7"><ErrorState error={request.error} onRetry={() => request.refetch()} /></div> : detail ? <div className="mt-6 grid gap-7 xl:grid-cols-[1fr_390px]">
       <section className="space-y-6">
         <div className="surface p-6 sm:p-8"><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.16em] text-slate-400">{detail.reference}</p><h1 className="mt-2 font-display text-3xl font-extrabold text-slate-900">{detail.route || `${detail.trip?.segments[0]?.origin || ""} → ${detail.trip?.segments.at(-1)?.destination || ""}`}</h1></div><StatusBadge status={detail.status} /></div><div className="mt-7 grid gap-4 sm:grid-cols-3"><Info label="Departure" value={formatDate(detail.departureDate || detail.trip?.segments[0]?.departureDate)} /><Info label="Passengers" value={String(detail.passengers?.length || detail.paxCount || 0)} /><Info label="Created" value={formatDate(detail.createdAt, true)} /></div></div>
+        <div className="surface p-6 sm:p-8">
+          <SectionHeading icon={<Plane className="h-5 w-5 text-blue-800" />} title="Itinerary" />
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <Info label="Trip type" value={prettyLabel(detail.trip?.type)} />
+            <Info label="Cabin class" value={prettyLabel(detail.trip?.cabinClass)} />
+            <Info label="Travellers" value={paxSummary(detail.trip?.passengers)} />
+          </div>
+          <ol className="mt-6 space-y-3">
+            {(detail.trip?.segments ?? []).map((segment, index) => <li key={index} className="surface-soft flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-800 text-xs font-bold text-white">{index + 1}</span>
+              <div className="flex items-center gap-2 font-display text-lg font-extrabold text-slate-900"><span>{segment.origin}</span><MapPin className="h-4 w-4 text-slate-300" /><span>{segment.destination}</span></div>
+              <span className="ml-auto text-sm font-bold text-slate-500">{formatDate(segment.departureDate)}</span>
+            </li>)}
+            {detail.trip?.returnDate && <li className="surface-soft flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">↩</span>
+              <div className="font-display text-lg font-extrabold text-slate-900">Return</div>
+              <span className="ml-auto text-sm font-bold text-slate-500">{formatDate(detail.trip.returnDate)}</span>
+            </li>}
+          </ol>
+        </div>
+
+        <div className="surface p-6 sm:p-8">
+          <SectionHeading icon={<Users className="h-5 w-5 text-blue-800" />} title={`Passengers (${detail.passengers?.length || 0})`} />
+          <div className="mt-6 space-y-4">
+            {(detail.passengers ?? []).map((passenger, index) => <div key={index} className="surface-soft p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2"><User className="h-4 w-4 text-blue-800" /><strong className="font-display text-base text-slate-900">{prettyLabel(passenger.title)} {passenger.firstName} {passenger.lastName}</strong></div>
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-blue-800">{passenger.type}</span>
+              </div>
+              <dl className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+                <DetailRow label="Gender" value={passenger.gender === "m" ? "Male" : passenger.gender === "f" ? "Female" : passenger.gender} />
+                <DetailRow label="Date of birth" value={formatDate(passenger.dob)} />
+                <DetailRow label="Nationality" value={passenger.nationality} />
+                <DetailRow label="Email" value={passenger.email} />
+                <DetailRow label="Phone" value={passenger.phone} />
+                <DetailRow label="Passport no." value={passenger.passportNumber} />
+                <DetailRow label="Passport expiry" value={formatDate(passenger.passportExpiry)} />
+                <DetailRow label="Issuing country" value={passenger.passportIssuingCountry} />
+              </dl>
+            </div>)}
+            {!detail.passengers?.length && <p className="text-sm text-slate-500">No passenger details on file.</p>}
+          </div>
+        </div>
+
+        <div className="surface p-6 sm:p-8">
+          <SectionHeading icon={<User className="h-5 w-5 text-blue-800" />} title="Contact" />
+          <dl className="mt-6 grid gap-x-6 gap-y-3 sm:grid-cols-3">
+            <DetailRow label="Name" value={detail.contact?.name} />
+            <DetailRow label="Email" value={detail.contact?.email} />
+            <DetailRow label="Phone" value={detail.contact?.phone} />
+          </dl>
+          {detail.notes && <div className="mt-6 border-t border-slate-100 pt-5"><div className="flex items-center gap-2 text-slate-500"><FileText className="h-4 w-4" /><span className="text-[10px] font-bold uppercase tracking-wide">Notes</span></div><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{detail.notes}</p></div>}
+        </div>
+
+        {(detail.statusHistory?.length || 0) > 0 && <div className="surface p-6 sm:p-8">
+          <SectionHeading icon={<Clock className="h-5 w-5 text-blue-800" />} title="Status timeline" />
+          <ol className="mt-6 space-y-4">
+            {[...(detail.statusHistory ?? [])].reverse().map((entry, index) => <li key={index} className="flex gap-4">
+              <div className="mt-1 flex flex-col items-center"><span className="h-2.5 w-2.5 rounded-full bg-blue-800" />{index < (detail.statusHistory!.length - 1) && <span className="mt-1 w-px flex-1 bg-slate-200" />}</div>
+              <div className="pb-2"><div className="flex flex-wrap items-center gap-2"><StatusBadge status={entry.status} /><span className="text-xs text-slate-400">{formatDate(entry.at, true)}</span></div>{entry.note && <p className="mt-1 text-sm text-slate-600">{entry.note}</p>}</div>
+            </li>)}
+          </ol>
+        </div>}
+
         <div className="surface p-6 sm:p-8"><div className="flex items-center gap-2"><MessageSquareText className="h-5 w-5 text-blue-800" /><h2 className="font-display text-xl font-extrabold text-slate-900">Conversation</h2></div><div className="mt-6 max-h-[430px] space-y-3 overflow-auto pr-1">{messages.isPending ? <InlineLoader /> : (messages.data?.data.messages || []).map((item) => <div key={item.id} className={`flex ${item.sender === "customer" ? "justify-end" : "justify-start"}`}><div className={`max-w-[82%] rounded-2xl px-4 py-3 ${item.sender === "customer" ? "bg-blue-800 text-white" : "bg-slate-100 text-slate-700"}`}><p className="text-sm leading-6">{item.body}</p><span className="mt-1 block text-[10px] opacity-60">{formatDate(item.createdAt, true)}</span></div></div>)}</div><div className="mt-5 flex gap-2"><textarea className="textarea min-h-12 flex-1" placeholder="Write a message" value={message} onChange={(event) => setMessage(event.target.value)} /><button className="btn-primary self-end" disabled={!message.trim() || busy === "message"} onClick={send}>{busy === "message" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</button></div></div>
       </section>
       <aside className="space-y-5">
@@ -80,4 +144,26 @@ export function BookingDetailPage() {
 
 function Info({ label, value }: { label: string; value?: string }) {
   return <div className="surface-soft p-4"><span className="text-[10px] font-bold uppercase text-slate-400">{label}</span><strong className="mt-1 block text-sm text-slate-900">{value || "—"}</strong></div>;
+}
+
+function SectionHeading({ icon, title }: { icon: ReactNode; title: string }) {
+  return <div className="flex items-center gap-2">{icon}<h2 className="font-display text-xl font-extrabold text-slate-900">{title}</h2></div>;
+}
+
+function DetailRow({ label, value }: { label: string; value?: string }) {
+  return <div><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</dt><dd className="mt-0.5 break-words text-sm font-semibold text-slate-800">{value || "—"}</dd></div>;
+}
+
+function prettyLabel(value?: string) {
+  if (!value) return "—";
+  return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function paxSummary(passengers?: { adults: number; children: number; infants: number }) {
+  if (!passengers) return "—";
+  const parts: string[] = [];
+  if (passengers.adults) parts.push(`${passengers.adults} adult${passengers.adults > 1 ? "s" : ""}`);
+  if (passengers.children) parts.push(`${passengers.children} child${passengers.children > 1 ? "ren" : ""}`);
+  if (passengers.infants) parts.push(`${passengers.infants} infant${passengers.infants > 1 ? "s" : ""}`);
+  return parts.join(", ") || "—";
 }
