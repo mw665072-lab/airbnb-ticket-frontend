@@ -18,6 +18,7 @@ export const publicService = {
   airports: (q: string, signal?: AbortSignal) => apiClient.get<ApiEnvelope<{ airports: Airport[] }>>("/airports", { params: { q }, signal }).then(r => r.data),
   popularRoutes: () => apiClient.get<ApiEnvelope<{ routes: PopularRoute[] }>>("/routes/popular").then(r => r.data),
   searchFlights: (payload: SearchFlightsPayload) => apiClient.post<ApiEnvelope<FlightSearchData>>("/flights/search", payload).then(r => r.data),
+  offer: (offerId: string) => apiClient.get<ApiEnvelope<{ offer: FlightSearchData["offers"][number] }>>(`/flights/offers/${offerId}`).then(r => r.data),
   enquiry: (payload: { name: string; email: string; phone: string; subject: string; message: string; source: "landing" | "portal" }) => apiClient.post<ApiEnvelope<{ enquiryId: string }>>("/enquiries", payload).then(r => r.data),
 };
 
@@ -32,8 +33,9 @@ export const bookingService = {
 };
 
 export const paymentService = {
-  methods: (country: string, currency: string) => apiClient.get<ApiEnvelope<{ methods: PaymentMethod[]; recommended: PaymentGateway }>>("/payments/methods", query({ country, currency })).then(r => r.data),
+  methods: (country: string, currency: string) => apiClient.get<ApiEnvelope<{ methods: PaymentMethod[]; recommended: PaymentGateway; manualPaymentAvailable: boolean }>>("/payments/methods", query({ country, currency })).then(r => r.data),
   create: (payload: { bookingRequestReference: string; gateway: PaymentGateway; billingCountry: string }, key: string) => apiClient.post<ApiEnvelope<PaymentCreateData>>("/payments/create", payload, idem(key)).then(r => r.data),
+  manualConfirm: (bookingRequestReference: string, key: string) => apiClient.post<ApiEnvelope<{ payment: Payment; booking: Booking | null; bookingRequestStatus?: string }>>("/payments/manual-confirm", { bookingRequestReference }, idem(key)).then(r => r.data),
   status: (reference: string) => apiClient.get<ApiEnvelope<{ payment: Payment }>>(`/payments/${reference}`).then(r => r.data),
 };
 
@@ -52,6 +54,10 @@ export const adminService = {
   booking: (reference: string) => apiClient.get<ApiEnvelope<{ booking: Booking }>>(`/admin/bookings/${reference}`).then(r => r.data),
   updateBooking: (reference: string, payload: Partial<Booking>) => apiClient.patch<ApiEnvelope<{ booking: Booking }>>(`/admin/bookings/${reference}`, payload).then(r => r.data),
   cancelBooking: (reference: string, payload: { reason: string; triggerRefund: boolean }) => apiClient.patch<ApiEnvelope<{ booking: Booking }>>(`/admin/bookings/${reference}/cancel`, payload).then(r => r.data),
+  duffelServicing: (reference: string) => apiClient.get<ApiEnvelope<{ fareConditions: Record<string, unknown> | null; availableServices: Booking["availableServices"]; seatMaps: unknown[]; scheduleChanges: Booking["scheduleChanges"] }>>(`/admin/bookings/${reference}/duffel-servicing`).then(r => r.data),
+  quoteDuffelCancellation: (reference: string, payload: { reason?: string }) => apiClient.post<ApiEnvelope<{ booking: Booking; cancellation: Booking["duffelCancellation"] }>>(`/admin/bookings/${reference}/duffel-cancellation`, payload).then(r => r.data),
+  confirmDuffelCancellation: (reference: string, payload: { reason?: string }) => apiClient.post<ApiEnvelope<{ booking: Booking; cancellation: Booking["duffelCancellation"] }>>(`/admin/bookings/${reference}/duffel-cancellation/confirm`, payload).then(r => r.data),
+  resolveScheduleChange: (reference: string, changeId: string, payload: { status: "accepted" | "rejected" | "noted"; message: string }) => apiClient.patch<ApiEnvelope<{ booking: Booking }>>(`/admin/bookings/${reference}/schedule-changes/${changeId}`, payload).then(r => r.data),
   uploadDocument: (reference: string, file: File) => { const body = new FormData(); body.append("document", file); return apiClient.post<ApiEnvelope<{ booking: Booking }>>(`/admin/bookings/${reference}/documents`, body, { headers: { "Content-Type": "multipart/form-data" } }).then(r => r.data); },
   customers: (params: ListParams) => apiClient.get<ApiEnvelope<{ customers: Customer[] }>>("/admin/customers", query(params)).then(r => r.data),
   customer: (id: string) => apiClient.get<ApiEnvelope<{ customer: Customer }>>(`/admin/customers/${id}`).then(r => r.data),
