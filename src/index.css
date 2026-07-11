@@ -1,0 +1,41 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root { color-scheme: light; font-synthesis: none; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: #f7f8fb; }
+body { margin: 0; min-width: 320px; color: #172033; background: #f7f8fb; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+::selection { background: #d8e4ff; color: #102755; }
+
+@layer components {
+  .page-shell { @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10; }
+  .surface { @apply rounded-3xl border border-slate-200/80 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.07)]; }
+  .surface-soft { @apply rounded-3xl border border-slate-200/70 bg-slate-50/80; }
+  .field { @apply h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100; }
+  .textarea { @apply min-h-28 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100; }
+  .label { @apply mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-slate-500; }
+  .btn-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#173f85] px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(23,63,133,0.22)] transition hover:-translate-y-0.5 hover:bg-[#102f67] disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-danger { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-5 text-sm font-bold text-white transition hover:bg-rose-700 disabled:opacity-50; }
+  .eyebrow { @apply text-xs font-bold uppercase tracking-[0.22em] text-blue-700; }
+  .display-title { @apply font-display text-4xl font-extrabold tracking-[-0.04em] text-[#13213b] sm:text-5xl lg:text-6xl; }
+  .section-title { @apply font-display text-3xl font-extrabold tracking-[-0.035em] text-[#13213b] sm:text-4xl; }
+  .data-table { @apply w-full border-separate border-spacing-0 text-left text-sm; }
+  .data-table th { @apply border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500; }
+  .data-table td { @apply border-b border-slate-100 px-4 py-4 align-middle text-slate-700; }
+}
+
+.hero-grid {
+  background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+.hero-orbit { animation: orbit 18s linear infinite; transform-origin: center; }
+@keyframes orbit { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }

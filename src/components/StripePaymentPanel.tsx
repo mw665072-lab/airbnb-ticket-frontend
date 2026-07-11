@@ -1,0 +1,7 @@
+import { PaymentElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { useState } from "react";
+import { LoaderCircle, LockKeyhole } from "lucide-react";
+
+function PaymentForm({ returnUrl }: { returnUrl: string }) { const stripe = useStripe(); const elements = useElements(); const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const submit=async(e:React.FormEvent)=>{e.preventDefault(); if(!stripe||!elements)return; setBusy(true); setError(""); const result=await stripe.confirmPayment({elements,confirmParams:{return_url:returnUrl}}); if(result.error)setError(result.error.message||"Payment confirmation failed"); setBusy(false);}; return <form onSubmit={submit} className="space-y-5"><PaymentElement /><button className="btn-primary w-full" disabled={!stripe||busy}>{busy?<LoaderCircle className="h-4 w-4 animate-spin"/>:<LockKeyhole className="h-4 w-4"/>}Pay securely</button>{error?<p className="text-sm font-semibold text-rose-600">{error}</p>:null}</form>; }
+export default function StripePaymentPanel({ clientSecret, publishableKey, paymentReference }: { clientSecret: string; publishableKey: string; paymentReference: string }) { const stripe=loadStripe(publishableKey); const returnUrl=`${import.meta.env.VITE_APP_URL||window.location.origin}/payment/${paymentReference}`; return <Elements stripe={stripe} options={{clientSecret,appearance:{theme:"stripe",variables:{borderRadius:"14px",colorPrimary:"#173f85"}}}}><PaymentForm returnUrl={returnUrl}/></Elements>; }
