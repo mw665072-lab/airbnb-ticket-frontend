@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import type { ApiEnvelope, Airport, AuthData, Booking, BookingRequestDetail, BookingRequestSummary, CreateBookingRequestPayload, Customer, DashboardData, Enquiry, FlightSearchData, ListParams, Message, Payment, PaymentCreateData, PaymentGateway, PaymentMethod, PopularRoute, SearchFlightsPayload, User } from "@/types/api";
+import type { ApiEnvelope, Airport, AuthData, Booking, BookingRequestDetail, BookingRequestSummary, CreateBookingRequestPayload, Customer, CustomerBooking, DashboardData, Enquiry, FlightSearchData, ListParams, ManualBookingPayload, Message, Payment, PaymentCreateData, PaymentGateway, PaymentMethod, PopularRoute, SearchFlightsPayload, User } from "@/types/api";
 
 const query = <T extends object>(params?: T) => ({ params });
 const idem = (key: string) => ({ headers: { "Idempotency-Key": key } });
@@ -28,8 +28,12 @@ export const bookingService = {
   detail: (reference: string, email?: string) => apiClient.get<ApiEnvelope<{ bookingRequest: BookingRequestDetail }>>(`/booking-requests/${reference}`, query(email ? { email } : undefined)).then(r => r.data),
   cancel: (reference: string) => apiClient.patch<ApiEnvelope<Record<string, never>>>(`/booking-requests/${reference}/cancel`).then(r => r.data),
   requestChange: (reference: string, message: string) => apiClient.post<ApiEnvelope<{ message: Message }>>(`/booking-requests/${reference}/change-request`, { message }).then(r => r.data),
+  requestCancellation: (reference: string, reason: string) => apiClient.post<ApiEnvelope<{ cancellationRequestedAt: string }>>(`/booking-requests/${reference}/cancellation-request`, { reason }).then(r => r.data),
   messages: (reference: string, params: ListParams & { email?: string }) => apiClient.get<ApiEnvelope<{ messages: Message[] }>>(`/booking-requests/${reference}/messages`, query(params)).then(r => r.data),
   sendMessage: (reference: string, body: string) => apiClient.post<ApiEnvelope<{ message: Message }>>(`/booking-requests/${reference}/messages`, { body }).then(r => r.data),
+  eTicket: (reference: string, email?: string) => apiClient.get<ApiEnvelope<{ booking: CustomerBooking | null }>>(`/booking-requests/${reference}/booking`, query(email ? { email } : undefined)).then(r => r.data),
+  eTicketPdf: (reference: string, email?: string) => apiClient.get(`/booking-requests/${reference}/e-ticket.pdf`, { params: email ? { email } : undefined, responseType: "blob" }).then(r => r.data as Blob),
+  emailETicket: (reference: string) => apiClient.post<ApiEnvelope<Record<string, never>>>(`/booking-requests/${reference}/e-ticket/email`).then(r => r.data),
 };
 
 export const paymentService = {
@@ -49,6 +53,7 @@ export const adminService = {
   replyRequest: (reference: string, body: string) => apiClient.post<ApiEnvelope<{ message: Message }>>(`/admin/booking-requests/${reference}/messages`, { body }).then(r => r.data),
   unreadMessages: () => apiClient.get<ApiEnvelope<{ unread: number }>>("/admin/messages/unread").then(r => r.data),
   bookRequest: (reference: string, payload: Record<string, unknown>, key: string) => apiClient.post<ApiEnvelope<{ booking: Booking }>>(`/admin/booking-requests/${reference}/book`, payload, idem(key)).then(r => r.data),
+  createManualBooking: (payload: ManualBookingPayload, key: string) => apiClient.post<ApiEnvelope<{ booking: Booking & { bookedByAdmin?: boolean }; requestReference: string }>>("/admin/bookings/manual", payload, idem(key)).then(r => r.data),
   bookViaDuffel: (reference: string, payload: { offerId?: string; acceptNewPrice?: boolean; paymentReceived?: { gateway: PaymentGateway; method: string; referenceNote: string } }, key: string) => apiClient.post<ApiEnvelope<{ booking: Booking & { duffelOrderId?: string; liveMode?: boolean } }>>(`/admin/booking-requests/${reference}/book-duffel`, payload, idem(key)).then(r => r.data),
   bookings: (params: ListParams) => apiClient.get<ApiEnvelope<{ bookings: Booking[] }>>("/admin/bookings", query(params)).then(r => r.data),
   booking: (reference: string) => apiClient.get<ApiEnvelope<{ booking: Booking }>>(`/admin/bookings/${reference}`).then(r => r.data),
@@ -61,6 +66,8 @@ export const adminService = {
   uploadDocument: (reference: string, file: File) => { const body = new FormData(); body.append("document", file); return apiClient.post<ApiEnvelope<{ booking: Booking }>>(`/admin/bookings/${reference}/documents`, body, { headers: { "Content-Type": "multipart/form-data" } }).then(r => r.data); },
   customers: (params: ListParams) => apiClient.get<ApiEnvelope<{ customers: Customer[] }>>("/admin/customers", query(params)).then(r => r.data),
   customer: (id: string) => apiClient.get<ApiEnvelope<{ customer: Customer }>>(`/admin/customers/${id}`).then(r => r.data),
+  updateCustomer: (id: string, payload: { name?: string; phone?: string; country?: string; email?: string }) => apiClient.patch<ApiEnvelope<{ customer: Customer }>>(`/admin/customers/${id}`, payload).then(r => r.data),
+  setCustomerBlocked: (id: string, blocked: boolean) => apiClient.patch<ApiEnvelope<{ customer: Customer }>>(`/admin/customers/${id}/block`, { blocked }).then(r => r.data),
   enquiries: (params: ListParams) => apiClient.get<ApiEnvelope<{ enquiries: Enquiry[] }>>("/admin/enquiries", query(params)).then(r => r.data),
   updateEnquiry: (id: string, status: Enquiry["status"]) => apiClient.patch<ApiEnvelope<{ enquiry: Enquiry }>>(`/admin/enquiries/${id}`, { status }).then(r => r.data),
   replyEnquiry: (id: string, message: string) => apiClient.post<ApiEnvelope<{ enquiry: Enquiry }>>(`/admin/enquiries/${id}/reply`, { message }).then(r => r.data),

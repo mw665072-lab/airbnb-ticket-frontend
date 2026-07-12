@@ -6,6 +6,7 @@ export const qk = {
   myRequests: (params: unknown) => ["booking-requests", "mine", params] as const,
   request: (reference: string, email?: string) => ["booking-requests", reference, email] as const,
   messages: (reference: string) => ["messages", reference] as const,
+  eTicket: (reference: string, email?: string) => ["booking-requests", reference, "e-ticket", email] as const,
   paymentMethods: (country: string, currency: string) => ["payments", "methods", country, currency] as const,
   payment: (reference: string) => ["payments", reference] as const,
   adminDashboard: ["admin", "dashboard"] as const,

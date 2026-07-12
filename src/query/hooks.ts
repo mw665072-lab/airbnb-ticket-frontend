@@ -14,6 +14,7 @@ export const useFlightSearch = (payload: SearchFlightsPayload | null) => useQuer
 export const useMyRequests = (params: ListParams) => useQuery({ queryKey: qk.myRequests(params), queryFn: () => bookingService.mine(params) });
 export const useBookingRequest = (reference: string, email?: string, enabled = true) => useQuery({ queryKey: qk.request(reference, email), queryFn: () => bookingService.detail(reference, email), enabled: enabled && Boolean(reference) });
 export const useMessages = (reference: string, email?: string) => useQuery({ queryKey: qk.messages(reference), queryFn: () => bookingService.messages(reference, { page: 1, limit: 50, email }), enabled: Boolean(reference), refetchInterval: 20_000 });
+export const useETicket = (reference: string, enabled = true, email?: string) => useQuery({ queryKey: qk.eTicket(reference, email), queryFn: () => bookingService.eTicket(reference, email), enabled: enabled && Boolean(reference), retry: false });
 export const usePaymentMethods = (country: string, currency: string, enabled = true) => useQuery({ queryKey: qk.paymentMethods(country, currency), queryFn: () => paymentService.methods(country, currency), enabled });
 export const usePaymentStatus = (reference: string) => useQuery({ queryKey: qk.payment(reference), queryFn: () => paymentService.status(reference), enabled: Boolean(reference), refetchInterval: (query) => ["pending", "processing"].includes(query.state.data?.data.payment.status || "") ? 3000 : false });
 

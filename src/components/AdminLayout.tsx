@@ -1,4 +1,4 @@
-import { BarChart3, BookOpenCheck, ChevronRight, CircleUserRound, Inbox, LogOut, Menu, Plane, TicketCheck, Users, UserRoundCog, X } from "lucide-react";
+import { BarChart3, BookOpenCheck, ChevronRight, CircleUserRound, Inbox, LogOut, Menu, Plane, TicketCheck, TicketPlus, Users, UserRoundCog, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { authService } from "@/api/services";
@@ -10,6 +10,7 @@ const baseNav = [
   { to: "/admin/dashboard", label: "Overview", icon: BarChart3 },
   { to: "/admin/requests", label: "Booking requests", icon: BookOpenCheck },
   { to: "/admin/bookings", label: "Bookings", icon: TicketCheck },
+  { to: "/admin/manual-booking", label: "Manual booking", icon: TicketPlus },
   { to: "/admin/customers", label: "Customers", icon: Users },
   { to: "/admin/enquiries", label: "Enquiries", icon: Inbox },
 ];

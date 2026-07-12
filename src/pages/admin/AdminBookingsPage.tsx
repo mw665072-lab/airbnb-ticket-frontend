@@ -97,7 +97,7 @@ export default function AdminBookingsPage() {
             <>
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[.15em] text-slate-400">{booking.reference}</p>
+                  <div className="flex items-center gap-2"><p className="text-[10px] font-bold uppercase tracking-[.15em] text-slate-400">{booking.reference}</p>{(booking as { bookedByAdmin?: boolean }).bookedByAdmin && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-700">Booked by Admin</span>}</div>
                   <h3 className="mt-2 font-display text-2xl font-extrabold text-slate-900">{booking.pnr || "No PNR"}</h3>
                   <p className="text-sm text-slate-500">{booking.airline}</p>
                 </div>

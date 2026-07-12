@@ -13,6 +13,7 @@ import { TrackBookingPage } from "@/pages/TrackBookingPage";
 import { ContactPage } from "@/pages/ContactPage";
 import { CustomerBookingsPage } from "@/pages/CustomerBookingsPage";
 import { BookingDetailPage } from "@/pages/BookingDetailPage";
+import { TicketPage } from "@/pages/TicketPage";
 import { PaymentStatusPage } from "@/pages/PaymentStatusPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { useAuthBootstrap } from "@/query/hooks";
@@ -22,6 +23,7 @@ const AdminDashboardPage = lazy(() => import("@/pages/admin/AdminDashboardPage")
 const AdminRequestsPage = lazy(() => import("@/pages/admin/AdminRequestsPage"));
 const AdminRequestDetailPage = lazy(() => import("@/pages/admin/AdminRequestDetailPage"));
 const AdminBookingsPage = lazy(() => import("@/pages/admin/AdminBookingsPage"));
+const AdminManualBookingPage = lazy(() => import("@/pages/admin/AdminManualBookingPage"));
 const AdminCustomersPage = lazy(() => import("@/pages/admin/AdminCustomersPage"));
 const AdminEnquiriesPage = lazy(() => import("@/pages/admin/AdminEnquiriesPage"));
 const AdminUsersPage = lazy(() => import("@/pages/admin/AdminUsersPage"));
@@ -50,13 +52,15 @@ export function App() {
           <Route path="forgot-password" element={<AuthPage mode="forgot" />} />
           <Route path="reset-password" element={<AuthPage mode="reset" />} />
           <Route path="verify-email" element={<AuthPage mode="verify" />} />
-          <Route path="booking/new" element={<BookingCreatePage />} />
           <Route path="track/:reference?" element={<TrackBookingPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="payment/:reference" element={<PaymentStatusPage />} />
           <Route element={<ProtectedRoute roles={["customer"]} />}>
+            {/* Booking requires login: guests are redirected to /login?returnTo=/booking/new */}
+            <Route path="booking/new" element={<BookingCreatePage />} />
             <Route path="account/bookings" element={<CustomerBookingsPage />} />
             <Route path="account/bookings/:reference" element={<BookingDetailPage />} />
+            <Route path="account/bookings/:reference/ticket" element={<TicketPage />} />
           </Route>
         </Route>
 
@@ -67,6 +71,7 @@ export function App() {
             <Route path="requests" element={<Suspense fallback={<FullPageLoader />}><AdminRequestsPage /></Suspense>} />
             <Route path="requests/:reference" element={<Suspense fallback={<FullPageLoader />}><AdminRequestDetailPage /></Suspense>} />
             <Route path="bookings" element={<Suspense fallback={<FullPageLoader />}><AdminBookingsPage /></Suspense>} />
+            <Route path="manual-booking" element={<Suspense fallback={<FullPageLoader />}><AdminManualBookingPage /></Suspense>} />
             <Route path="customers" element={<Suspense fallback={<FullPageLoader />}><AdminCustomersPage /></Suspense>} />
             <Route path="enquiries" element={<Suspense fallback={<FullPageLoader />}><AdminEnquiriesPage /></Suspense>} />
             <Route path="users" element={<Suspense fallback={<FullPageLoader />}><AdminUsersPage /></Suspense>} />
